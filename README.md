@@ -75,14 +75,15 @@ Add photos and videos to `media/`, add a soundtrack as `media/soundtrack.mp3`, t
 ```bash
 pnpm validate --project ./project.json
 pnpm analyze --project ./project.json
+pnpm editor --project ./project.json
 pnpm preview --project ./project.json
 pnpm render --project ./project.json
 ```
 
 The final file is written to the path configured in `output.file`.
 
-`project.json`, `media/`, `photos/`, `output/`, and `.slideshow-cache/` are ignored by Git to reduce
-the risk of publishing private material.
+`project.json`, `*.edits.json`, `media/`, `photos/`, `output/`, and `.slideshow-cache/` are ignored
+by Git to reduce the risk of publishing private material.
 
 ## Try the synthetic demo
 
@@ -103,6 +104,7 @@ No personal media or network download is involved.
 | ----------------------------------------------------- | ------------------------------------------------- |
 | `pnpm validate --project FILE`                        | Validate configuration and referenced files       |
 | `pnpm analyze --project FILE`                         | Analyze media and create the manifest and reports |
+| `pnpm editor --project FILE`                          | Open the local manual framing editor              |
 | `pnpm preview --project FILE`                         | Open the composition in Remotion Studio           |
 | `pnpm render --project FILE`                          | Render the existing manifest to MP4               |
 | `pnpm render --project FILE --rebuild-manifest`       | Analyze again, then render                        |
@@ -110,7 +112,7 @@ No personal media or network download is involved.
 | `pnpm render:scene --project FILE --scene scene-0012` | Render one scene                                  |
 | `pnpm clean-cache --project FILE`                     | Remove normalized media and render chunks         |
 | `pnpm demo:generate`                                  | Generate local synthetic demo assets              |
-| `pnpm check`                                          | Run TypeScript, unit tests, and ESLint            |
+| `pnpm check`                                          | Run types, tests, lint, and the editor build      |
 
 ## Configuration
 
@@ -193,6 +195,35 @@ Available overrides include:
 - inclusion, hero status, and collage permission;
 - video excerpt start and end times.
 
+## Manual framing editor
+
+The automatic timeline remains responsible for dates, transitions, collages, duration, and beat
+synchronization. The local Framing Editor adds a human-controlled layer for the decisions that
+benefit most from visual sensitivity:
+
+```bash
+pnpm analyze --project ./project.json
+pnpm editor --project ./project.json
+```
+
+The editor opens in the browser and uses the same Remotion composition as the final MP4. Select a
+scene and a photo, then:
+
+- drag the photo to move its focus;
+- use the zoom slider to emphasize the important subject;
+- switch between showing the complete photo and filling its frame;
+- hold `Shift` while dragging to move the entire frame;
+- drag a corner handle to resize the frame;
+- adjust rotation or restore the automatic framing.
+
+Changes are saved automatically beside the project file. For example, `project.json` writes
+`project.edits.json`, while `project.local.json` writes `project.local.edits.json`. These sidecar
+files are ignored by Git by default and are applied automatically by `preview`, `render`,
+`render:thumbnail`, and `render:scene`.
+
+Re-running `analyze` does not erase manual work. Edits are attached to the scene assets and can be
+reapplied when scene numbering changes but the same group of media remains together.
+
 ## Chronological ordering
 
 Date resolution uses this priority:
@@ -223,9 +254,9 @@ Photo frames use two layers:
 1. a blurred, enlarged background that fills the frame;
 2. a sharp foreground rendered with `contain`, preserving the complete image.
 
-Pan and zoom are applied only to the decorative background layer. The foreground remains intact, so
-faces near an edge are not lost. Manual focus points remain available for custom layouts and
-background positioning.
+Automatic pan and zoom are applied only to the decorative background layer. The foreground remains
+intact, so faces near an edge are not lost. The manual framing editor can deliberately zoom or crop
+the foreground when a human chooses a more expressive composition.
 
 ## Beat synchronization
 
@@ -298,6 +329,7 @@ src/
   analysis/       metadata, dates, hashes, beat detection, image and video processing
   cli/            command-line interface
   config/         project loading and validation
+  editor/         local framing editor, API, and manual-edit persistence
   manifest/       manifest and report generation
   remotion/       compositions, scenes, media frames, and decorations
   rendering/      Remotion bundle, chunk rendering, and FFmpeg finalization

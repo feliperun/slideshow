@@ -31,13 +31,16 @@ export const MediaFrame: React.FC<Props> = ({ asset, scenePhoto, scene, theme, s
   const internalScale = interpolate(progress, [0, 1], [movement.startScale, movement.endScale]);
   const x = interpolate(progress, [0, 1], [movement.startX, movement.endX]);
   const y = interpolate(progress, [0, 1], [movement.startY, movement.endY]);
+  const contentScale = scenePhoto.contentScale ?? 1;
   const foregroundStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
     width: '100%',
     height: '100%',
-    objectFit: 'contain',
+    objectFit: scenePhoto.fit ?? 'contain',
     objectPosition: `${scenePhoto.focus.x * 100}% ${scenePhoto.focus.y * 100}%`,
+    transform: `scale(${contentScale})`,
+    transformOrigin: `${scenePhoto.focus.x * 100}% ${scenePhoto.focus.y * 100}%`,
     filter: 'drop-shadow(0 8px 18px rgba(20, 12, 42, .2))',
   };
   const backdropStyle: React.CSSProperties = {

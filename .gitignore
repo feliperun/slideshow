@@ -5,6 +5,7 @@ output/
 /media/
 /project.json
 /project.local.json
+*.edits.json
 examples/family/photos/
 examples/family/audio/
 .DS_Store

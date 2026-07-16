@@ -82,6 +82,16 @@ export const scenePhotoSchema = z.object({
   focus: z.object({ x: z.number(), y: z.number() }),
   rotation: z.number(),
   scale: z.number().positive(),
+  contentScale: z.number().min(0.5).max(4).optional(),
+  fit: z.enum(['contain', 'cover']).optional(),
+  frame: z
+    .object({
+      x: z.number().min(0).max(1),
+      y: z.number().min(0).max(1),
+      width: z.number().min(0.08).max(1),
+      height: z.number().min(0.08).max(1),
+    })
+    .optional(),
   movement: movementSchema,
 });
 

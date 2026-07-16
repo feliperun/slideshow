@@ -7,6 +7,7 @@ import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import type { LoadedProject } from '../config/load-project.js';
 import type { SlideshowManifest } from '../schemas/manifest.js';
+import { writeJsonAtomic } from '../utils/files.js';
 import { framesToSeconds } from '../utils/frames.js';
 import { logger } from '../utils/logging.js';
 import { stableHash } from '../utils/seeded-random.js';
@@ -134,7 +135,7 @@ export const renderSlideshow = async (
   });
   const chunkFrames = manifest.fps * 15;
   const renderFingerprint = stableHash({
-    rendererVersion: 10,
+    rendererVersion: 11,
     totalFrames: manifest.totalFrames,
     theme: manifest.theme,
     scenes: manifest.scenes,
@@ -319,11 +320,13 @@ export const copyPreview = async (source: string, destination: string): Promise<
   await copyFile(source, destination);
 };
 
-export const launchStudio = (
+export const launchStudio = async (
   project: LoadedProject,
-  manifestFile: string,
-): Promise<number | null> =>
-  new Promise((resolve, reject) => {
+  manifest: SlideshowManifest,
+): Promise<number | null> => {
+  const manifestFile = path.join(project.projectRoot, 'output', '.preview-manifest.json');
+  await writeJsonAtomic(manifestFile, manifest);
+  return new Promise((resolve, reject) => {
     const child = spawn(
       'pnpm',
       [
@@ -341,3 +344,4 @@ export const launchStudio = (
     child.on('error', reject);
     child.on('exit', resolve);
   });
+};

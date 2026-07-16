@@ -3,6 +3,9 @@ import { access, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Command } from 'commander';
 import { loadProject } from '../config/load-project.js';
+import { applyManualEdits } from '../editor/manual-edits.js';
+import { loadManualEdits } from '../editor/manual-edits-storage.js';
+import { launchFramingEditor } from '../editor/server.js';
 import { generateManifest, manifestFileFor } from '../manifest/generate.js';
 import { manifestSchema, type SlideshowManifest } from '../schemas/manifest.js';
 import { launchStudio, renderSlideshow, renderThumbnail } from '../rendering/render.js';
@@ -17,7 +20,7 @@ const projectOption = (command: Command): Command =>
 const readManifest = async (file: string): Promise<SlideshowManifest> =>
   manifestSchema.parse(JSON.parse(await readFile(file, 'utf8')));
 
-const loadOrGenerateManifest = async (
+const loadBaseManifest = async (
   projectFile: string,
   rebuild: boolean,
 ): Promise<{ project: Awaited<ReturnType<typeof loadProject>>; manifest: SlideshowManifest }> => {
@@ -32,6 +35,14 @@ const loadOrGenerateManifest = async (
     }
   }
   return { project, manifest: await generateManifest(project) };
+};
+
+const loadOrGenerateManifest = async (
+  projectFile: string,
+  rebuild: boolean,
+): Promise<{ project: Awaited<ReturnType<typeof loadProject>>; manifest: SlideshowManifest }> => {
+  const { project, manifest } = await loadBaseManifest(projectFile, rebuild);
+  return { project, manifest: applyManualEdits(manifest, await loadManualEdits(project)) };
 };
 
 projectOption(
@@ -76,8 +87,29 @@ projectOption(program.command('preview').description('abre o Remotion Studio loc
       project: string;
       rebuildManifest: boolean;
     }) => {
-      const { project } = await loadOrGenerateManifest(projectFile, rebuildManifest);
-      await launchStudio(project, manifestFileFor(project));
+      const { project, manifest } = await loadOrGenerateManifest(projectFile, rebuildManifest);
+      await launchStudio(project, manifest);
+    },
+  );
+
+projectOption(program.command('edit').description('abre o editor manual de enquadramento'))
+  .option('--rebuild-manifest', 'refaz a análise antes do editor', false)
+  .option('--port <number>', 'porta do editor local', (value) => Number(value), 4173)
+  .action(
+    async ({
+      project: projectFile,
+      rebuildManifest,
+      port,
+    }: {
+      project: string;
+      rebuildManifest: boolean;
+      port: number;
+    }) => {
+      if (!Number.isInteger(port) || port < 1024 || port > 65_535) {
+        throw new Error(`Porta inválida: ${port}`);
+      }
+      const { project, manifest } = await loadBaseManifest(projectFile, rebuildManifest);
+      await launchFramingEditor(project, manifest, port);
     },
   );
 

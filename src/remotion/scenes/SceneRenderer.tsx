@@ -3,50 +3,7 @@ import type { MediaAsset, Scene, SlideshowManifest } from '../../schemas/manifes
 import { themes } from '../../themes';
 import { Decorations } from '../components/Decorations';
 import { MediaFrame } from '../components/MediaFrame';
-
-const mediaPositions = (
-  layout: Scene['layout'],
-  count: number,
-  index: number,
-): React.CSSProperties => {
-  if (layout === 'single-portrait') return { left: '29%', top: '8%', width: '42%', height: '84%' };
-  if (layout === 'single-landscape' || layout === 'hero')
-    return { left: '7%', top: '8%', width: '86%', height: '79%' };
-  if (layout === 'square-editorial') return { left: '26%', top: '7%', width: '48%', height: '78%' };
-  if (layout === 'video-editorial') return { left: '8%', top: '9%', width: '84%', height: '76%' };
-  if (layout === 'polaroid')
-    return { left: '25%', top: '6%', width: '50%', height: '79%', paddingBottom: 55 };
-  if (layout === 'timeline-strip') return { left: '14%', top: '9%', width: '72%', height: '72%' };
-  if (layout === 'split-screen') {
-    return { left: index === 0 ? '5%' : '51%', top: '11%', width: '44%', height: '72%' };
-  }
-  if (layout === 'photo-stack') {
-    const stack = [
-      { left: '12%', top: '15%', width: '43%', height: '68%' },
-      { left: '46%', top: '9%', width: '43%', height: '70%' },
-      { left: '31%', top: '20%', width: '40%', height: '66%' },
-    ];
-    return stack[index] ?? stack[stack.length - 1]!;
-  }
-  if (layout === 'album-page') {
-    const album = [
-      { left: '8%', top: '12%', width: '42%', height: '64%' },
-      { left: '53%', top: '9%', width: '38%', height: '45%' },
-      { left: '56%', top: '57%', width: '34%', height: '30%' },
-    ];
-    return album[index] ?? album[album.length - 1]!;
-  }
-  if (count === 2) {
-    return { left: index === 0 ? '7%' : '52%', top: '12%', width: '41%', height: '69%' };
-  }
-  const collage = [
-    { left: '5%', top: '9%', width: '48%', height: '46%' },
-    { left: '56%', top: '7%', width: '38%', height: '54%' },
-    { left: '12%', top: '59%', width: '38%', height: '31%' },
-    { left: '55%', top: '64%', width: '36%', height: '25%' },
-  ];
-  return collage[index] ?? collage[collage.length - 1]!;
-};
+import { frameRectStyle, mediaFrameRect } from '../layouts';
 
 const readableBadge: React.CSSProperties = {
   color: '#fff',
@@ -100,11 +57,14 @@ export const SceneRenderer: React.FC<{
           style={{
             position: 'absolute',
             zIndex: 40,
-            left: `${manifest.safeArea.left * 100}%`,
-            right: `${manifest.safeArea.right * 100}%`,
-            top: scene.type === 'outro' ? '62%' : '36%',
+            left: scene.type === 'outro' ? '50%' : `${manifest.safeArea.left * 100}%`,
+            right: scene.type === 'outro' ? undefined : `${manifest.safeArea.right * 100}%`,
+            top: scene.type === 'outro' ? '73%' : '36%',
             textAlign: 'center',
-            transform: `translateY(${(1 - textEnter) * 35}px)`,
+            transform:
+              scene.type === 'outro'
+                ? `translate(-50%, ${(1 - textEnter) * 35}px)`
+                : `translateY(${(1 - textEnter) * 35}px)`,
             opacity: textEnter,
             color: '#fff',
             textShadow: '0 5px 24px rgba(40,20,70,.55)',
@@ -112,10 +72,19 @@ export const SceneRenderer: React.FC<{
         >
           <div
             style={{
+              ...(scene.type === 'outro' ? readableBadge : {}),
               fontFamily: theme.typography.display,
               fontSize: scene.type === 'intro' ? 112 : 76,
               fontWeight: 800,
               lineHeight: 1,
+              ...(scene.type === 'outro'
+                ? {
+                    display: 'inline-block',
+                    padding: '18px 30px 20px',
+                    borderRadius: 24,
+                    whiteSpace: 'nowrap',
+                  }
+                : {}),
             }}
           >
             {scene.title}
@@ -147,7 +116,12 @@ export const SceneRenderer: React.FC<{
               scene={scene}
               theme={theme}
               index={index}
-              style={mediaPositions(scene.layout, scene.photos.length, index)}
+              style={{
+                ...frameRectStyle(
+                  mediaFrameRect(scene.layout, scene.photos.length, index, photo.frame),
+                ),
+                ...(scene.layout === 'polaroid' ? { paddingBottom: 55 } : {}),
+              }}
             />
           );
         })}
