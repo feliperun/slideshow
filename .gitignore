@@ -1,0 +1,11 @@
+node_modules/
+output/
+.slideshow-cache/
+/photos/
+/media/
+/project.json
+/project.local.json
+examples/family/photos/
+examples/family/audio/
+.DS_Store
+*.log

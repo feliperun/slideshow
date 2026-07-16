@@ -1,0 +1,39 @@
+{
+  "id": "family-demo",
+  "title": "Nossa história",
+  "subtitle": "Um pequeno álbum de memórias",
+  "closingMessage": "Que venham muitas outras histórias.",
+  "photosDirectory": "photos",
+  "targetDurationSeconds": 40,
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "theme": "warm-memory",
+  "seed": "family-demo-2026",
+  "music": {
+    "file": "audio/soundtrack.wav",
+    "volume": 0.55,
+    "fadeInSeconds": 1.5,
+    "fadeOutSeconds": 3,
+    "loop": true
+  },
+  "introDurationSeconds": 4,
+  "outroDurationSeconds": 5,
+  "defaultTransitionSeconds": 0.6,
+  "minimumSceneSeconds": 2.2,
+  "idealSceneSeconds": 3.6,
+  "maximumSceneSeconds": 6,
+  "allowCollages": true,
+  "allowPhotoRemoval": false,
+  "photos": {
+    "2024-01-20-01.jpg": {
+      "caption": "Um dia especial",
+      "hero": true,
+      "priority": 1.8
+    }
+  },
+  "output": {
+    "file": "output/family-demo.mp4",
+    "quality": "high"
+  }
+}
